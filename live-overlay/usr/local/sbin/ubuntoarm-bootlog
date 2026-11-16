@@ -1,0 +1,12 @@
+#!/bin/sh
+# UbuntoARM: grava o log do kernel e do systemd no pendrive (/cdrom) durante o boot,
+# com sync a cada segundo, para sobrar o que aconteceu antes de um reset de hardware.
+mount -o remount,rw /cdrom 2>/dev/null || { echo "ubuntoarm-bootlog: /cdrom não montou rw"; exit 0; }
+d=/cdrom/ubuntoarm-logs
+mkdir -p "$d"
+n=$(ls "$d" | grep -c '^boot-.*-kernel\.txt$')
+b="$d/boot-$(printf %03d "$n")"
+{ date; cat /proc/cmdline; uname -a; } > "$b-info.txt"
+dmesg -w > "$b-kernel.txt" 2>&1 &
+journalctl -b -f -o short-monotonic --no-hostname > "$b-journal.txt" 2>&1 &
+while sleep 1; do sync "$d" 2>/dev/null || sync; done

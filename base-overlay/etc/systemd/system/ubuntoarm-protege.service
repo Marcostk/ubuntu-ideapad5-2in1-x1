@@ -1,0 +1,11 @@
+[Unit]
+Description=UbuntoARM: protege o kernel corrigido do 83GH contra atualizações
+After=local-fs.target
+Before=apt-daily.service apt-daily-upgrade.service unattended-upgrades.service packagekit.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ubuntoarm-protege
+
+[Install]
+WantedBy=multi-user.target

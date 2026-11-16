@@ -1,0 +1,14 @@
+# firmware/ é proprietário (Qualcomm/Lenovo): cada um extrai do próprio Windows com scripts/extract-firmware.*
+firmware/
+# cópias da ISO, kernels/initrds gerados, logs, vídeos
+work/
+*.dtb
+*.dtbo
+*.ko
+*.o
+*.mod
+*.mod.c
+*.cmd
+.*.cmd
+Module.symvers
+modules.order

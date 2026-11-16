@@ -1,0 +1,46 @@
+#!/bin/sh
+# UbuntoARM: protege o sistema instalado do 83GH contra atualizações que o fariam reiniciar no boot.
+# Roda a cada boot (ubuntoarm-protege.service) e no reparo. Idempotente.
+#  - bloqueia no apt qualquer pacote de kernel (só o 7.3.0-15 corrigido funciona neste aparelho)
+#  - mantém o 7.3.0-15 em hold/manual (nunca removido por autoremove)
+#  - fixa o GRUB no 7.3.0-15, mesmo se outro kernel aparecer
+#  - desvia o UCM de áudio do pacote alsa-ucm-conf para a atualização não desfazer a correção
+# Uso: ubuntoarm-protege [UUID_da_raiz]   (sem argumento, descobre pela raiz montada)
+V=7.3.0-15-qcom-x1e
+[ -d /usr/lib/modules/$V ] || exit 0
+[ "$(findmnt -n -o FSTYPE /)" = overlay ] && [ -z "$1" ] && exit 0   # live do pendrive: nada a fazer
+
+# 1. apt: nenhum kernel instalável
+P=/etc/apt/preferences.d/ubuntoarm-kernel
+cat > "$P.new" <<'EOF'
+# UbuntoARM: o IdeaPad 5 2-in-1 (83GH) só boota com o kernel 7.3.0-15 corrigido
+# (DTB do 83GH + módulo de interconexão). Qualquer outro kernel do apt reinicia o aparelho no boot.
+Package: linux-image-* linux-modules-* linux-modules-extra-* linux-headers-* linux-tools-[0-9]* linux-buildinfo-* linux-qcom-x1e linux-qcom-x1e-* linux-*-qcom-x1e linux-generic*
+Pin: version *
+Pin-Priority: -1
+EOF
+cmp -s "$P.new" "$P" && rm "$P.new" || mv "$P.new" "$P"
+
+# 2. o kernel corrigido nunca sai
+for p in linux-image-$V linux-modules-$V; do
+  dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'ok installed' || continue
+  apt-mark manual "$p" >/dev/null 2>&1
+  apt-mark hold "$p" >/dev/null 2>&1
+done
+
+# 3. GRUB sempre no 7.3.0-15
+uuid=${1:-$(findmnt -n -o UUID /)}
+G=/etc/default/grub.d/ubuntoarm-default.cfg
+want="GRUB_DEFAULT=\"gnulinux-advanced-$uuid>gnulinux-$V-advanced-$uuid\""
+if [ -n "$uuid" ] && ! grep -qxF "$want" "$G" 2>/dev/null; then
+  printf '# UbuntoARM: boot sempre no kernel corrigido\n%s\n' "$want" > "$G"
+  update-grub >/dev/null 2>&1
+fi
+
+# 4. UCM de áudio: o arquivo do pacote vai para .distrib e o nosso fica corrigido
+U=/usr/share/alsa/ucm2/Qualcomm/x1e80100/x1e80100.conf
+dpkg-divert --list "$U" | grep -q 'local diversion' || \
+  dpkg-divert --local --rename --divert "$U.distrib" --add "$U" >/dev/null
+[ -f "$U.distrib" ] && sed 's/Ideapad\.\*5\.\*/[Ii]dea[Pp]ad.*5.*/' "$U.distrib" > "$U.new" && \
+  { cmp -s "$U.new" "$U" && rm "$U.new" || mv "$U.new" "$U"; }
+exit 0

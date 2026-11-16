@@ -1,0 +1,88 @@
+diff --git a/hexagonrpcd/apps_std.c b/hexagonrpcd/apps_std.c
+index 7172bf0..c9ed635 100644
+--- a/hexagonrpcd/apps_std.c
++++ b/hexagonrpcd/apps_std.c
+@@ -188,6 +188,12 @@ static uint32_t apps_std_fopen_with_env(void *data,
+ 		return AEE_EFAILED;
+ 	}
+ 
++	/* UbuntoARM (teste): segura o ADSP aqui para ver se o reset depende do registro ou do tempo */
++	if (getenv("UBUNTOARM_SEGURA") && strstr(inbufs[3].p, "sns_secure_database")) {
++		fprintf(stderr, "SEGURANDO %s por 30 s\n", (const char *) inbufs[3].p);
++		for (int i = 1; i <= 30; i++) { sleep(1); fprintf(stderr, "segurando %d s\n", i); }
++	}
++
+ 	fd = hexagonfs_openat(ctx->fds, ctx->rootfd, dirfd, inbufs[3].p);
+ 	if (fd < 0) {
+ 		fprintf(stderr, "Could not open %s: %s\n",
+@@ -208,6 +214,23 @@ static uint32_t apps_std_fopen_with_env(void *data,
+ 	return 0;
+ }
+ 
++/*
++ * UbuntoARM: o ADSP do Snapdragon X apaga arquivos do registro de sensores antes de regravá-los.
++ * O registro servido é uma cópia somente leitura (gerada no Windows), então só registra o pedido.
++ */
++static uint32_t apps_std_fremove(void *data,
++				 const struct fastrpc_io_buffer *inbufs,
++				 struct fastrpc_io_buffer *outbufs)
++{
++	if (inbufs[1].s == 0 || ((const char *) inbufs[1].p)[inbufs[1].s - 1] != 0)
++		return AEE_EBADPARM;
++
++	fprintf(stderr, "fremove(%s): ignorado (registro somente leitura)\n",
++		(const char *) inbufs[1].p);
++
++	return 0;
++}
++
+ static uint32_t apps_std_opendir(void *data,
+ 				 const struct fastrpc_io_buffer *inbufs,
+ 				 struct fastrpc_io_buffer *outbufs)
+@@ -445,7 +468,10 @@ static const struct fastrpc_function_impl apps_std_procs[] = {
+ 	{ .def = NULL, .impl = NULL, },
+ 	{ .def = NULL, .impl = NULL, },
+ 	{ .def = NULL, .impl = NULL, },
+-	{ .def = NULL, .impl = NULL, },
++	{
++		.def = &apps_std_fremove_def,
++		.impl = apps_std_fremove,
++	},
+ 	{ .def = NULL, .impl = NULL, },
+ 	{
+ 		.def = &apps_std_opendir_def,
+diff --git a/hexagonrpcd/interface/apps_std.c b/hexagonrpcd/interface/apps_std.c
+index 67b3ace..67d31d1 100644
+--- a/hexagonrpcd/interface/apps_std.c
++++ b/hexagonrpcd/interface/apps_std.c
+@@ -105,6 +105,18 @@ const struct hrpc_method_def_interp4 apps_std_fopen_with_env_def = {
+ 	.inner_types = NULL,
+ };
+ 
++static struct hrpc_arg_def_interp4 apps_std_fremove_args[] = {
++	{ HRPC_ARG_BLOB_SEQ, sizeof(char) },
++};
++
++const struct hrpc_method_def_interp4 apps_std_fremove_def = {
++	.msg_id = 24,
++	.n_args = HRPC_ARRAY_SIZE(apps_std_fremove_args),
++	.args = apps_std_fremove_args,
++	.n_inner_types = 0,
++	.inner_types = NULL,
++};
++
+ static struct hrpc_arg_def_interp4 apps_std_opendir_args[] = {
+ 	{ HRPC_ARG_BLOB_SEQ, sizeof(char) },
+ 	{ HRPC_ARG_OUT_BLOB, sizeof(uint64_t) },
+diff --git a/hexagonrpcd/interface/apps_std.h b/hexagonrpcd/interface/apps_std.h
+index b80a1ca..d152bee 100644
+--- a/hexagonrpcd/interface/apps_std.h
++++ b/hexagonrpcd/interface/apps_std.h
+@@ -33,6 +33,7 @@ extern struct hrpc_method_def_interp4 apps_std_fopen_with_env_def;
+ extern struct hrpc_method_def_interp4 apps_std_opendir_def;
+ extern struct hrpc_method_def_interp4 apps_std_closedir_def;
+ extern struct hrpc_method_def_interp4 apps_std_readdir_def;
++extern struct hrpc_method_def_interp4 apps_std_fremove_def;
+ extern struct hrpc_method_def_interp4 apps_std_mkdir_def;
+ extern struct hrpc_method_def_interp4 apps_std_stat_def;
+ 

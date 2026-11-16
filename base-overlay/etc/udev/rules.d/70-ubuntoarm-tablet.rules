@@ -1,0 +1,3 @@
+# UbuntoARM: o botão "Modo tablet" (extensão tablet@ubuntoarm) desliga o teclado e o touchpad internos
+# do IdeaPad 5 2-in-1 (83GH) pelo atributo "inhibited" do kernel; só esses dois dispositivos.
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="input[0-9]*", ATTR{name}=="hid-over-i2c 048D:8987|hid-over-i2c 04F3:327E*", RUN+="/bin/chmod 0666 /sys%p/inhibited"

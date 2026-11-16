@@ -1,0 +1,12 @@
+#!/bin/sh
+# UbuntoARM: mesmo contorno de firmware do GRUB do pendrive Ubuntu x1e (cutmem no Snapdragon X).
+cat <<'EOF'
+smbios --type 4 --get-string 5 --set proc_version
+regexp "Snapdragon.*" "$proc_version"
+if [ $? = 0 ]; then
+  # Work around Snapdragon X firmware bug. cutmem is not allowed in lockdown mode.
+  if [ "$lockdown" != "y" ]; then
+    cutmem 0x8800000000 0x8fffffffff
+  fi
+fi
+EOF

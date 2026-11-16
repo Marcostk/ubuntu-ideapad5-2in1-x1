@@ -1,0 +1,4 @@
+# UbuntoARM: curva perceptual do brilho do OLED (extensão oled-brilho@ubuntoarm) ativa para todo usuário novo.
+# Precisa de glib-compile-schemas /usr/share/glib-2.0/schemas depois de copiar (o dpkg refaz isso a cada update).
+[org.gnome.shell]
+enabled-extensions=['oled-brilho@ubuntoarm', 'tablet@ubuntoarm']

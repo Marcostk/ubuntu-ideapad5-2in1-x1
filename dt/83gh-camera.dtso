@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * UbuntoARM: câmera USB (30c9:00de) do 83GH, copiado de x1p42100-lenovo-ideapad-5-2in1.dts.
+ * - VREG_CAM_5P0 (GPIO 44) alimenta a câmera; não existe no Slim 5x, que ainda reserva os GPIOs 44-47
+ *   (gpio-reserved-ranges) e faz o tlmm recusar o pino com -EINVAL.
+ * - Repetidores eUSB cruzados em relação ao Slim 5x: no 83GH o usb_2 (câmera) usa o redriver@4b
+ *   com reset no GPIO 7, e o usb_1_ss2 usa o redriver@43 sem reset. build-hybrid.sh apaga o
+ *   reset-gpios do redriver@43 (overlay não remove propriedades).
+ * 1 = GPIO_ACTIVE_LOW, 0 = GPIO_ACTIVE_HIGH.
+ */
+/dts-v1/;
+/plugin/;
+
+&{/} {
+	vreg_cam_5p0: regulator-cam-5p0 {
+		compatible = "regulator-fixed";
+		regulator-name = "VREG_CAM_5P0";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&tlmm 44 0>;
+		enable-active-high;
+		pinctrl-0 = <&cam_reg_en>;
+		pinctrl-names = "default";
+		regulator-boot-on;
+		regulator-always-on;
+	};
+};
+
+&tlmm {
+	/* o Slim 5x reserva os GPIOs 44-47; no 83GH o 44 é a alimentação da câmera */
+	gpio-reserved-ranges = <34 2>, <72 2>;
+
+	cam_reg_en: cam-reg-en-state {
+		pins = "gpio44";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-disable;
+	};
+};
+
+&eusb9_repeater {
+	reset-gpios = <&tlmm 7 1>;
+	pinctrl-0 = <&eusb5_reset_n>;
+};
+
+&usb_2_hsphy {
+	phys = <&eusb9_repeater>;
+};
+
+&usb_1_ss2_hsphy {
+	phys = <&eusb5_repeater>;
+};

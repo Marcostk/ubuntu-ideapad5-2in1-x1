@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * UbuntoARM: tela touch + caneta Wacom (WACF2200) do 83GH no i2c8, copiado de
+ * x1p42100-lenovo-ideapad-5-2in1.dts. 8 = IRQ_TYPE_LEVEL_LOW.
+ */
+/dts-v1/;
+/plugin/;
+
+&tlmm {
+	ts0_default: ts0-default-state {
+		int-n-pins {
+			pins = "gpio51";
+			function = "gpio";
+			bias-disable;
+		};
+
+		reset-n-pins {
+			pins = "gpio48";
+			function = "gpio";
+			output-high;
+			drive-strength = <16>;
+		};
+	};
+};
+
+&i2c8 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	/* WACF2200 */
+	touchscreen@a {
+		compatible = "hid-over-i2c";
+		reg = <0x0a>;
+		hid-descr-addr = <0x1>;
+		interrupts-extended = <&tlmm 51 8>;
+		vdd-supply = <&vreg_misc_3p3>;
+		vddl-supply = <&vreg_l15b_1p8>;
+		pinctrl-0 = <&ts0_default>;
+		pinctrl-names = "default";
+	};
+};

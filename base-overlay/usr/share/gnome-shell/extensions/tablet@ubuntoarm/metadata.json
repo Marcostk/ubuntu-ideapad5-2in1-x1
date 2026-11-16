@@ -1,0 +1,6 @@
+{
+  "uuid": "tablet@ubuntoarm",
+  "name": "Modo tablet (UbuntoARM)",
+  "description": "Botão manual de modo tablet e rotação para o IdeaPad 5 2-in-1 (83GH): os sensores de dobradiça e orientação ficam no ADSP e não funcionam no Linux.",
+  "shell-version": ["51"]
+}

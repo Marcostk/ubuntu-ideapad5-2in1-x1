@@ -1,0 +1,12 @@
+[Unit]
+Description=UbuntoARM: grava o log do boot no pendrive
+DefaultDependencies=no
+After=systemd-journald.service
+Before=sysinit.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/ubuntoarm-bootlog
+
+[Install]
+WantedBy=sysinit.target

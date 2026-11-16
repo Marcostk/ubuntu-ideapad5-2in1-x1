@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * UbuntoARM: firmware do 83GH (copiado do Windows) em vez do 83HL do Slim 5x.
+ * Liga ADSP (som, bateria, sensores), CDSP, zap shader da GPU e o codec de vídeo (iris).
+ */
+/dts-v1/;
+/plugin/;
+
+&remoteproc_adsp {
+	firmware-name = "qcom/x1p42100/LENOVO/83GH/qcadsp8380.mbn",
+			"qcom/x1p42100/LENOVO/83GH/adsp_dtbs.elf";
+};
+
+&remoteproc_cdsp {
+	firmware-name = "qcom/x1p42100/LENOVO/83GH/qccdsp8380.mbn",
+			"qcom/x1p42100/LENOVO/83GH/cdsp_dtbs.elf";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/x1p42100/LENOVO/83GH/qcdxkmsucpurwa.mbn";
+};
+
+&iris {
+	firmware-name = "qcom/x1p42100/LENOVO/83GH/qcvss8380_pa.mbn";
+};

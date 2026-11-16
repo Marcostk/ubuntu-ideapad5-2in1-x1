@@ -1,0 +1,15 @@
+#!/bin/sh
+# UbuntoARM: firmware que o 83GH precisa já no initramfs (remoteproc, GPU e áudio carregam ali e não
+# tentam de novo depois do switch_root). Nenhum desses módulos declara o firmware no modinfo.
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in prereqs) prereqs; exit 0 ;; esac
+. /usr/share/initramfs-tools/hook-functions
+
+for f in /usr/lib/firmware/qcom/x1p42100/LENOVO/83GH/* \
+         /usr/lib/firmware/qcom/gen71500_sqe.fw* \
+         /usr/lib/firmware/qcom/gen71500_gmu.bin* \
+         /usr/lib/firmware/qcom/x1e80100/X1E80100-LENOVO-Ideapad-5-tplg.bin*; do
+  [ -e "$f" ] && copy_file firmware "$f"
+done
+exit 0
