@@ -22,6 +22,7 @@ e corrige o que impede o boot e o uso diário nesse modelo. Instalado em dual bo
 | Brilho da tela | ✅ com a extensão `oled-brilho` (ver abaixo) |
 | Modo tablet e rotação | ✅ **manual**, botão nas configurações rápidas (extensão `tablet`) |
 | Detecção automática de dobradiça/orientação | ❌ os sensores ficam no ADSP; ver "Sensores" |
+| Modos de energia (Economia / Equilibrado / **Desempenho** com boost 3,42 GHz) | ✅ com `extras/modos-de-energia` |
 | Suspensão | não testada a fundo |
 
 ## O que foi corrigido
@@ -52,6 +53,13 @@ e corrige o que impede o boot e o uso diário nesse modelo. Instalado em dual bo
    (o Mutter só o pede num segundo `enable` do text-input-v3, que esses apps não mandam).
 7. **Brave/Chromium.** Restos de desenho na tela com a rasterização por GPU no freedreno: usar
    `--disable-gpu-rasterization` (e `--enable-wayland-ime --wayland-text-input-version=3` para o teclado na tela).
+
+8. **Modos de energia.** O `power-profiles-daemon` só tem o driver `placeholder` aqui: Economia e Equilibrado
+   não mudavam nada e não havia Desempenho. O boost da CPU (3,42 GHz nos núcleos 4–7) vinha desligado. Com
+   [`extras/modos-de-energia`](extras/modos-de-energia) (`sudo bash extras/modos-de-energia/instalar.sh`), o
+   `tuned-ppd` assume o menu do GNOME com três modos reais: Economia (sem boost, CPU até 1,92 GHz, GPU até
+   666 MHz), Equilibrado (sem boost, até 3,24 GHz) e Desempenho (boost até 3,42 GHz; ~28% mais rápido num
+   núcleo). Todos com o governador `schedutil`.
 
 O diário completo da investigação, rodada a rodada, está em [PLANO.md](PLANO.md).
 
