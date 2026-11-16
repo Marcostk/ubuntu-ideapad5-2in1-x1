@@ -2,5 +2,11 @@
   "uuid": "oled-brilho@ubuntoarm",
   "name": "Brilho OLED (UbuntoARM)",
   "description": "Curva perceptual para o brilho do OLED do IdeaPad 5 2-in-1 (83GH): o painel recebe luminância linear e o GNOME mapeia o controle linearmente.",
-  "shell-version": ["51"]
+  "shell-version": [
+    "51"
+  ],
+  "session-modes": [
+    "user",
+    "unlock-dialog"
+  ]
 }
